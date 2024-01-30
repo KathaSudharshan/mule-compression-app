@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:compression="http://www.mulesoft.org/schema/mule/compression"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/compression http://www.mulesoft.org/schema/mule/compression/current/mule-compression.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="a416d15e-363e-4eb4-8ec1-9917de1eb990" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="mule-compression-appFlow" doc:id="b4fa5af2-71b6-42cc-88ce-7e362332134b" >
+		<http:listener doc:name="Listener" doc:id="1a1b1950-61d4-427c-bc55-735582ee29d8" config-ref="HTTP_Listener_config" path="/compress"/>
+		<ee:transform doc:name="Transform Message" doc:id="1c90d278-d580-46d7-bb66-1c4e0f928152" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<compression:compress doc:name="Compress" doc:id="1491e771-e9f9-4241-a56c-4b859b58ee2f" >
+			<compression:compressor >
+				<compression:gzip-compressor />
+			</compression:compressor>
+		</compression:compress>
+		<file:write doc:name="Write" doc:id="532a3071-4417-4ae5-9352-f064e0d2381d" path="C:\Java\File_Tests\test.json"/>
+	</flow>
+	<flow name="mule-compression-appFlow1" doc:id="08934530-a07f-49fd-bb1d-91ced140d526" >
+		<http:listener doc:name="Listener" doc:id="623338bb-bd07-49db-8e5c-0b81cfe8f960" config-ref="HTTP_Listener_config" path="/decomp"/>
+		<file:read doc:name="Read" doc:id="be09ecec-885c-4be0-86e7-0cf348cc556d" path="C:\Java\File_Tests\test.json" outputMimeType="text/plain; streaming=true"/>
+		<compression:decompress doc:name="Decompress" doc:id="325c3a8d-add8-46a2-bb74-e590697c9077" >
+			<compression:decompressor >
+				<compression:gzip-decompressor />
+			</compression:decompressor>
+		</compression:decompress>
+		<ee:transform doc:name="Transform Message" doc:id="7ec7b9a4-a587-459e-a7ca-86d36589ca89" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json deferred=true
+---
+payload map $]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
